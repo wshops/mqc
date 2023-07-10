@@ -2,27 +2,31 @@ package mqc
 
 import (
 	"context"
+	"fmt"
 	"github.com/eclipse/paho.golang/paho"
-	"time"
 )
 
-func (mqc *Mqc) PublishMessage(topic string, qos byte, msg []byte) error {
-
-	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+func (m *Mqc) Publish(topic string, payload []byte, qos QOS, retain ...bool) error {
+	retainFlag := false
+	if len(retain) > 0 {
+		retainFlag = retain[0]
+	}
+	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-
-	pr, err := instance.connectionManager.Publish(ctx, &paho.Publish{
-		QoS:     qos,
+	pb, err := m.cm.Publish(ctx, &paho.Publish{
+		QoS:     byte(qos),
+		Retain:  retainFlag,
 		Topic:   topic,
-		Payload: msg,
+		Payload: payload,
 	})
 	if err != nil {
 		return err
 	}
-
-	if pr.ReasonCode != 0 && pr.ReasonCode != 16 { // 16 // = Server received message but there are no subscribers
-		instance.log.Warnf("reason code %d received\n", pr.ReasonCode)
+	if err != nil {
+		m.options.logger.Error("MQ publish error: ", err)
+	} else if pb.ReasonCode != 0 && pb.ReasonCode != 16 { // 16 = Server received message but there are no subscribers
+		m.options.logger.Error("MQ publish error: ", pb.ReasonCode)
 	}
-
+	m.options.logger.Debug(fmt.Sprintf("MQ message published: %s", topic))
 	return nil
 }

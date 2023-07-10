@@ -9,8 +9,10 @@ require (
 )
 
 require (
-	github.com/gorilla/websocket v1.4.2 // indirect
+	github.com/eclipse/paho.mqtt.golang v1.4.3 // indirect
+	github.com/gorilla/websocket v1.5.0 // indirect
 	go.uber.org/atomic v1.10.0 // indirect
 	go.uber.org/multierr v1.9.0 // indirect
-	golang.org/x/sync v0.0.0-20201207232520-09787c993a3a // indirect
+	golang.org/x/net v0.12.0 // indirect
+	golang.org/x/sync v0.3.0 // indirect
 )
