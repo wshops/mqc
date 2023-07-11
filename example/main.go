@@ -2,40 +2,34 @@ package main
 
 import (
 	"fmt"
+	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/wshops/mqc"
 	"github.com/wshops/zlog"
-	"os"
-	"os/signal"
-	"syscall"
 	"time"
 )
 
 func main() {
 	zlog.New(zlog.LevelDev)
-	mqc.New(
-		mqc.WithServerURL("mqtt://173.82.219.121:1883"),
-		mqc.WithClientID("wshops-mqtt-client-test"),
-		mqc.WithAuth("anxuanzi", "anxuanzi"),
-		mqc.WithKeepAlive(10),
-		mqc.WithConnectRetryDelay(10*time.Second),
-		mqc.WithLogger(zlog.Log()),
-	)
 
-	err := mqc.RegisterSubscriber("aaa/bbb/ccc", mqc.AtMostOnce, func(message mqc.Message) error {
-		fmt.Println("receive message:", message.Payload())
-		return nil
+	options := mqc.NewMqcOptions().AddBroker("tcp://100.100.10.13:1883").SetClientID("go_test_client")
+	options.SetUsername("goTest").SetPassword("123456")
+	options.SetKeepAlive(30 * time.Second)
+	options.SetPingTimeout(1 * time.Second)
+
+	mqc.New(options, zlog.Log())
+	mqc.ServerConnect()
+	err := mqc.RegisterSubscriber("test1", mqc.ExactlyOnce, func(client mqtt.Client, message mqtt.Message) {
+		fmt.Printf("TOPIC: %s\n", message.Topic())
+		fmt.Printf("MSG: %s\n", message.Payload())
 	})
 	if err != nil {
-		return
+		panic(err)
 	}
-
-	mqc.Start()
-
-	sig := make(chan os.Signal, 1)
-	signal.Notify(sig, os.Interrupt)
-	signal.Notify(sig, syscall.SIGTERM)
-	<-sig
-	fmt.Println("signal caught - exiting")
-	mqc.Stop()
-	fmt.Println("shutdown complete")
+	mqc.ServerConnect()
+	err = mqc.Publish("test1", mqc.ExactlyOnce, false, []byte("this is a test message!"))
+	if err != nil {
+		panic(err)
+	}
+	defer mqc.ServerDisconnect(0)
+	time.Sleep(time.Second * 5)
 }
