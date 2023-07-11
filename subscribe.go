@@ -1,46 +1,38 @@
 package mqc
 
-import "github.com/eclipse/paho.golang/paho"
+import (
+	"fmt"
+	mqtt "github.com/eclipse/paho.mqtt.golang"
+)
 
-type Message struct {
-	msgPackage *paho.Publish
-}
-
-type MsgHandler func(Message) error
-
-func (m *Message) Topic() string {
-	return m.msgPackage.Topic
-}
-
-func (m *Message) Payload() []byte {
-	return m.msgPackage.Payload
-}
-
-func (m *Message) Qos() QOS {
-	return QOS(m.msgPackage.QoS)
-}
-
-func (m *Message) IsDuplicate() bool {
-	return m.msgPackage.Packet().Duplicate
-}
-
-func (m *Message) IsRetain() bool {
-	return m.msgPackage.Packet().Retain
-}
-
-func (m *Message) PacketID() uint16 {
-	return m.msgPackage.Packet().PacketID
-}
-
-func (m *Mqc) RegisterSubscriber(topic string, qos QOS, handler MsgHandler) {
-	m.subscribeOptions[topic] = paho.SubscribeOptions{
-		QoS: byte(qos),
+func (m *Mqc) registerSubscriber(topic string, qos byte, handler mqtt.MessageHandler) error {
+	if !m.client.IsConnected() {
+		ServerConnect()
 	}
-	m.router.RegisterHandler(topic, func(publish *paho.Publish) {
-		err := handler(Message{msgPackage: publish})
-		if err != nil {
-			m.options.logger.Error("MQ message handler error, err: ", err)
-			return
-		}
-	})
+
+	token := m.client.Subscribe(topic, qos, handler)
+
+	if token.Wait() && token.Error() != nil {
+		m.log.Error(token.Error())
+		return token.Error()
+	}
+
+	m.log.Debug(fmt.Sprintf("MQ message subscribed, topic is %s", topic))
+	return nil
+}
+
+func (m *Mqc) unsubscribe(topic string) error {
+	if !m.client.IsConnected() {
+		ServerConnect()
+	}
+
+	token := m.client.Unsubscribe(topic)
+
+	if token.Wait() && token.Error() != nil {
+		m.log.Error(token.Error())
+		return token.Error()
+	}
+
+	m.log.Debug(fmt.Sprintf("MQ message has not subscribed, topic is %s", topic))
+	return nil
 }
