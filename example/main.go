@@ -10,14 +10,9 @@ import (
 
 func main() {
 	zlog.New(zlog.LevelDev)
+	o := mqc.NewOptions("tcp://100.100.10.13:1883", "go_test_client", 30*time.Second, "goTest", "123456")
 
-	options := mqc.NewMqcOptions().AddBroker("tcp://100.100.10.13:1883").SetClientID("go_test_client")
-	options.SetUsername("goTest").SetPassword("123456")
-	options.SetKeepAlive(30 * time.Second)
-	options.SetPingTimeout(1 * time.Second)
-
-	mqc.New(options, zlog.Log())
-	mqc.ServerConnect()
+	mqc.New(o, zlog.Log())
 	err := mqc.RegisterSubscriber("test1", mqc.ExactlyOnce, func(client mqtt.Client, message mqtt.Message) {
 		fmt.Printf("TOPIC: %s\n", message.Topic())
 		fmt.Printf("MSG: %s\n", message.Payload())
