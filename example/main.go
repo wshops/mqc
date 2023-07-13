@@ -10,8 +10,7 @@ import (
 
 func main() {
 	zlog.New(zlog.LevelDev)
-	o := mqc.NewOptions("tcp://100.100.10.13:1883", "go_test_client", 30*time.Second, "goTest", "123456")
-
+	o := mqc.NewOptions("tcp://100.100.10.13:1883", "go_test_client", "goTest", "123456")
 	mqc.New(o, zlog.Log())
 	err := mqc.RegisterSubscriber("test1", mqc.ExactlyOnce, func(client mqtt.Client, message mqtt.Message) {
 		fmt.Printf("TOPIC: %s\n", message.Topic())

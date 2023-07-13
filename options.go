@@ -20,22 +20,29 @@ type Options struct {
 	connectRetry         bool          // How long to wait between connection attempts (defaults to 10s)
 	connectRetryInterval time.Duration // use second
 	connectTimeout       time.Duration // use second
-	Username             string
-	Password             string
+	username             string
+	password             string
 	keepAlive            time.Duration // Keepalive period in seconds
 }
 
 var clientOption *Options
 
-func NewOptions(serverURL string, clientID string, keepAlive time.Duration, username string, password string) *Options {
+func NewOptions(serverURL string, clientID string, username string, password string) *Options {
 	clientOption = &Options{
 		serverURL: serverURL,
 		clientID:  clientID,
-		keepAlive: keepAlive,
-		Username:  username,
-		Password:  password,
+		username:  username,
+		password:  password,
 	}
 	return clientOption
+}
+
+func (o *Options) SetKeepAlive(keepAlive time.Duration) *Options {
+	if o == nil {
+		panic("Options == nil , please checkout")
+	}
+	o.keepAlive = keepAlive
+	return o
 }
 
 func (o *Options) SetConnectTimeout(connectTimeout time.Duration) *Options {

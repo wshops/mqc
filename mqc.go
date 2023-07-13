@@ -9,6 +9,7 @@ import (
 
 type Mqc struct {
 	client mqtt.Client
+	option *mqtt.ClientOptions
 	log    *zap.SugaredLogger
 }
 
@@ -20,8 +21,10 @@ func New(opt *Options, logger *zap.SugaredLogger) {
 	}
 	MqcClientOption := mqtt.NewClientOptions()
 	MqcClientOption.AddBroker(opt.serverURL).SetClientID(opt.clientID)
-	MqcClientOption.SetKeepAlive(opt.keepAlive)
-	MqcClientOption.SetUsername(opt.Username).SetPassword(opt.Password)
+	MqcClientOption.SetUsername(opt.username).SetPassword(opt.password)
+	if opt.keepAlive != 0*time.Second {
+		MqcClientOption.SetKeepAlive(opt.keepAlive)
+	}
 	if opt.connectTimeout != 0*time.Second {
 		MqcClientOption.SetConnectTimeout(opt.connectTimeout)
 	}
@@ -29,8 +32,9 @@ func New(opt *Options, logger *zap.SugaredLogger) {
 		MqcClientOption.SetConnectRetry(opt.connectRetry).SetConnectRetryInterval(opt.connectRetryInterval)
 	}
 	instance = &Mqc{
-		client: mqtt.NewClient(MqcClientOption),
+		client: mqtt.NewClient(instance.option),
 		log:    logger,
+		option: MqcClientOption,
 	}
 	if token := instance.client.Connect(); token.Wait() && token.Error() != nil {
 		panic(token.Error())
