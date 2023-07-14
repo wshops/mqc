@@ -32,14 +32,13 @@ func New(opt *Options, logger *zap.SugaredLogger) {
 		MqcClientOption.SetConnectRetry(opt.connectRetry).SetConnectRetryInterval(opt.connectRetryInterval)
 	}
 	instance = &Mqc{
-		client: mqtt.NewClient(instance.option),
+		client: mqtt.NewClient(MqcClientOption),
 		log:    logger,
 		option: MqcClientOption,
 	}
 	if token := instance.client.Connect(); token.Wait() && token.Error() != nil {
 		panic(token.Error())
 	}
-	instance.client.Connect()
 }
 
 // ServerDisconnect Disconnect will end the connection with the server,
