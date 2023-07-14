@@ -4,19 +4,37 @@ import (
 	"errors"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"go.uber.org/zap"
+	"time"
 )
 
 type Mqc struct {
 	client mqtt.Client
+	option *mqtt.ClientOptions
 	log    *zap.SugaredLogger
 }
 
 var instance *Mqc
 
-func New(opt *mqtt.ClientOptions, logger *zap.SugaredLogger) {
+func New(opt *Options, logger *zap.SugaredLogger) {
+	if opt == nil {
+		panic("opt == nil, please checkout")
+	}
+	MqcClientOption := mqtt.NewClientOptions()
+	MqcClientOption.AddBroker(opt.serverURL).SetClientID(opt.clientID)
+	MqcClientOption.SetUsername(opt.username).SetPassword(opt.password)
+	if opt.keepAlive != 0*time.Second {
+		MqcClientOption.SetKeepAlive(opt.keepAlive)
+	}
+	if opt.connectTimeout != 0*time.Second {
+		MqcClientOption.SetConnectTimeout(opt.connectTimeout)
+	}
+	if opt.connectRetry {
+		MqcClientOption.SetConnectRetry(opt.connectRetry).SetConnectRetryInterval(opt.connectRetryInterval)
+	}
 	instance = &Mqc{
-		client: mqtt.NewClient(opt),
+		client: mqtt.NewClient(instance.option),
 		log:    logger,
+		option: MqcClientOption,
 	}
 	if token := instance.client.Connect(); token.Wait() && token.Error() != nil {
 		panic(token.Error())

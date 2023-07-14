@@ -1,6 +1,6 @@
 package mqc
 
-import mqtt "github.com/eclipse/paho.mqtt.golang"
+import "time"
 
 // QOS describes the quality of service of an mqtt publish
 type QOS byte
@@ -14,44 +14,52 @@ const (
 	ExactlyOnce
 )
 
-func NewMqcOptions() *mqtt.ClientOptions {
-	return mqtt.NewClientOptions()
+type Options struct {
+	serverURL            string        // URL for the broker (use tcp://)
+	clientID             string        // Client ID to use when connecting to server
+	connectRetry         bool          // How long to wait between connection attempts (defaults to 10s)
+	connectRetryInterval time.Duration // use second
+	connectTimeout       time.Duration // use second
+	username             string
+	password             string
+	keepAlive            time.Duration // Keepalive period in seconds
 }
 
-//
-//type MqcOptions struct {
-//	serverURL            string        // URL for the broker (schemes supported include 'mqtt' and 'tls')
-//	clientID             string        // Client ID to use when connecting to server
-//	keepAlive            time.Duration // Keepalive period in seconds (the maximum time interval that is permitted to elapse between the point at which the Client finishes transmitting one MQTT Control Packet and the point it starts sending the next)
-//	connectRetry         bool          /// How long to wait between connection attempts (defaults to 10s)
-//	connectRetryInterval time.Duration
-//	connectTimeout       time.Duration
-//	authUsername         string
-//	authPassword         string
-//}
-//
-//var opt MqcOptions
-//
-//func NewMqcOptions(serverURL string, clientID string, keepAlive time.Duration, authUsername string, authPassword string) MqcOptions {
-//	opt = MqcOptions{
-//		serverURL:    serverURL,
-//		clientID:     clientID,
-//		keepAlive:    keepAlive,
-//		authUsername: authUsername,
-//		authPassword: authPassword,
-//	}
-//	return opt
-//}
-//
-//func (o *MqcOptions) SetConnectTimeout(connectTimeout time.Duration) *MqcOptions {
-//	o.connectTimeout = connectTimeout
-//	return o
-//}
-//
-//func (o *MqcOptions) SetConnectRetry(connectRetry bool, connectRetryInterval time.Duration) *MqcOptions {
-//	o.connectRetry = connectRetry
-//	if connectRetry {
-//		o.connectRetryInterval = connectRetryInterval
-//	}
-//	return o
-//}
+var clientOption *Options
+
+func NewOptions(serverURL string, clientID string, username string, password string) *Options {
+	clientOption = &Options{
+		serverURL: serverURL,
+		clientID:  clientID,
+		username:  username,
+		password:  password,
+	}
+	return clientOption
+}
+
+func (o *Options) SetKeepAlive(keepAlive time.Duration) *Options {
+	if o == nil {
+		panic("Options == nil , please checkout")
+	}
+	o.keepAlive = keepAlive
+	return o
+}
+
+func (o *Options) SetConnectTimeout(connectTimeout time.Duration) *Options {
+	if o == nil {
+		panic("Options == nil , please checkout")
+	}
+	o.connectTimeout = connectTimeout
+	return o
+}
+
+func (o *Options) SetConnectRetry(connectRetry bool, connectRetryInterval time.Duration) *Options {
+	if o == nil {
+		panic("Options == nil , please checkout")
+	}
+	o.connectRetry = connectRetry
+	if connectRetry {
+		o.connectRetryInterval = connectRetryInterval
+	}
+	return o
+}
