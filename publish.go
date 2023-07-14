@@ -4,11 +4,11 @@ import (
 	"fmt"
 )
 
-func (m *Mqc) publish(topic string, qos byte, retain bool, payload []byte) error {
+func (m *Mqc) publish(topic string, qos QOS, retain bool, payload []byte) error {
 	if !m.client.IsConnected() {
 		ServerConnect()
 	}
-	token := m.client.Publish(topic, qos, retain, payload)
+	token := m.client.Publish(topic, byte(qos), retain, payload)
 	token.Wait()
 	if token.Error() != nil {
 		m.log.Error(token.Error())

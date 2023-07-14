@@ -5,12 +5,12 @@ import (
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 )
 
-func (m *Mqc) registerSubscriber(topic string, qos byte, handler mqtt.MessageHandler) error {
+func (m *Mqc) registerSubscriber(topic string, qos QOS, handler mqtt.MessageHandler) error {
 	if !m.client.IsConnected() {
 		ServerConnect()
 	}
 
-	token := m.client.Subscribe(topic, qos, handler)
+	token := m.client.Subscribe(topic, byte(qos), handler)
 
 	if token.Wait() && token.Error() != nil {
 		m.log.Error(token.Error())

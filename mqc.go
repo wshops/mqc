@@ -56,14 +56,14 @@ func ServerConnect() {
 	}
 }
 
-func Publish(topic string, qos byte, retain bool, payload []byte) error {
+func Publish(topic string, qos QOS, retain bool, payload []byte) error {
 	if instance == nil {
 		return errors.New("MQC not initialized")
 	}
 	return instance.publish(topic, qos, retain, payload)
 }
 
-func RegisterSubscriber(topic string, qos byte, handler mqtt.MessageHandler) error {
+func RegisterSubscriber(topic string, qos QOS, handler mqtt.MessageHandler) error {
 	if instance == nil {
 		return errors.New("MQC not initialized")
 	}

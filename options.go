@@ -7,7 +7,7 @@ type QOS byte
 
 const (
 	// AtMostOnce means the broker will deliver at most once to every subscriber - this means message delivery is not guaranteed
-	AtMostOnce byte = iota
+	AtMostOnce QOS = iota
 	// AtLeastOnce means the broker will deliver a message at least once to every subscriber
 	AtLeastOnce
 	// ExactlyOnce means the broker will deliver a message exactly once to every subscriber
