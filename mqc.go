@@ -1,7 +1,6 @@
 package mqc
 
 import (
-	"errors"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"go.uber.org/zap"
 	"time"
@@ -32,14 +31,13 @@ func New(opt *Options, logger *zap.SugaredLogger) {
 		MqcClientOption.SetConnectRetry(opt.connectRetry).SetConnectRetryInterval(opt.connectRetryInterval)
 	}
 	instance = &Mqc{
-		client: mqtt.NewClient(instance.option),
+		client: mqtt.NewClient(MqcClientOption),
 		log:    logger,
 		option: MqcClientOption,
 	}
 	if token := instance.client.Connect(); token.Wait() && token.Error() != nil {
 		panic(token.Error())
 	}
-	instance.client.Connect()
 }
 
 // ServerDisconnect Disconnect will end the connection with the server,
@@ -56,23 +54,43 @@ func ServerConnect() {
 	}
 }
 
-func Publish(topic string, qos QOS, retain bool, payload []byte) error {
+func Publish(topic string, qos QOS, retain bool, payload []byte) {
 	if instance == nil {
-		return errors.New("MQC not initialized")
+		instance.log.Panic("MQC not initialized")
 	}
-	return instance.publish(topic, qos, retain, payload)
+	err := instance.publish(topic, qos, retain, payload)
+	if err != nil {
+		instance.log.Panic(err)
+	}
+
 }
 
-func RegisterSubscriber(topic string, qos QOS, handler mqtt.MessageHandler) error {
+func RegisterSubscriber(topic string, qos QOS, handler mqtt.MessageHandler) {
 	if instance == nil {
-		return errors.New("MQC not initialized")
+		instance.log.Panic("MQC not initialized")
 	}
-	return instance.registerSubscriber(topic, qos, handler)
+	err := instance.registerSubscriber(topic, qos, handler)
+	if err != nil {
+		instance.log.Panic(err)
+	}
 }
 
-func Unsubscribe(topic string) error {
+func RegisterMultipleSubscriber(topics map[string]byte, callback mqtt.MessageHandler) {
 	if instance == nil {
-		return errors.New("MQC not initialized")
+		instance.log.Panic("MQC not initialized")
 	}
-	return instance.unsubscribe(topic)
+	token := instance.client.SubscribeMultiple(topics, callback)
+	if token.Wait() && token.Error() != nil {
+		instance.log.Panic(token.Error())
+	}
+}
+
+func Unsubscribe(topic string) {
+	if instance == nil {
+		instance.log.Panic("MQC not initialized")
+	}
+	err := instance.unsubscribe(topic)
+	if err != nil {
+		instance.log.Panic(err)
+	}
 }
