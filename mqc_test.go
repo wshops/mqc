@@ -3,6 +3,7 @@ package mqc
 import (
 	"fmt"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
+	"github.com/stretchr/testify/assert"
 	"github.com/wshops/zlog"
 	"strconv"
 	"testing"
@@ -44,6 +45,6 @@ func TestRegisterMultipleSubscriber(t *testing.T) {
 	Publish("test1", ExactlyOnce, false, []byte("test1:123"))
 	Publish("test2", ExactlyOnce, false, []byte("test2:456"))
 	fmt.Println(receiveMessage)
-	//assert.Equal(t, "test1:123", receiveMessage[0])
-	//assert.Equal(t, "test2:456", receiveMessage[1])
+	assert.Equal(t, "test1:123", receiveMessage[0])
+	assert.Equal(t, "test2:456", receiveMessage[1])
 }
