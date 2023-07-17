@@ -1,6 +1,7 @@
 package mqc
 
 import (
+	"errors"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"go.uber.org/zap"
 	"time"
@@ -54,15 +55,15 @@ func ServerConnect() {
 	}
 }
 
-func Publish(topic string, qos QOS, retain bool, payload []byte) {
+func Publish(topic string, qos QOS, retain bool, payload []byte) error {
 	if instance == nil {
-		instance.log.Panic("MQC not initialized")
+		return errors.New("MQC not initialized")
 	}
 	err := instance.publish(topic, qos, retain, payload)
 	if err != nil {
-		instance.log.Panic(err)
+		return err
 	}
-
+	return nil
 }
 
 func RegisterSubscriber(topic string, qos QOS, handler mqtt.MessageHandler) {
